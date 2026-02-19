@@ -11,7 +11,7 @@
 
 ## 📁 Project Structure
 * `main.py` - The central controller to run the entire pipeline.
-* `simulator.py` - Dell server environment emulator.
+* `simulate.py` - Dell server environment emulator.
 * `analyzer.py` - Statistical engine for baseline calculation.
 * `guard.py` - Monitoring and rollback logic.
 * `visualizer.py` - Reporting tool (generates PNG charts).
