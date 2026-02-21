@@ -11,6 +11,7 @@ from src.reporting.logger import setup_logging, log_threshold_breach, log_system
 from src.reporting.metrics import PerformanceMetrics, Timer
 from src.utils.config import get_config
 from src.data.models import ThresholdConfig, IncidentReport
+from src.utils.exceptions import MonitoringError, ThresholdCalculationError, AIProviderError, DataLoadError
 
 # Monitoring constants
 INCIDENT_START_STEP = 6  # Step at which simulator triggers incident (matches simulator behavior)
@@ -48,15 +49,18 @@ class GuardSystem:
     
     def calculate_threshold(self) -> ThresholdConfig:
         """Calculate monitoring threshold from baseline data"""
-        mean_cpu, std_cpu = self.data_loader.load_baseline_data()
-        threshold_value = mean_cpu + (self.sigma * std_cpu)
-        
-        self.logger.info(f"Threshold calculated: {threshold_value:.2f}% ({self.sigma}-Sigma)")
-        
-        return ThresholdConfig(cpu_threshold=threshold_value, sigma=self.sigma)
+        try:
+            mean_cpu, std_cpu = self.data_loader.load_baseline_data()
+            threshold_value = mean_cpu + (self.sigma * std_cpu)
+            
+            self.logger.info(f"Threshold calculated: {threshold_value:.2f}% ({self.sigma}-Sigma)")
+            
+            return ThresholdConfig(cpu_threshold=threshold_value, sigma=self.sigma)
+        except DataLoadError as e:
+            raise ThresholdCalculationError(f"Failed to calculate threshold: {e}")
     
     def analyze_incident(self, cpu_usage: float, threshold: float) -> str:
-        """Analyze incident using AI provider"""
+        """Analyze incident using AI provider with graceful degradation"""
         prompt = f"""
     Analyze this server telemetry from a Dell server. 
     A rollback was triggered. What is the most likely cause?
@@ -73,10 +77,16 @@ class GuardSystem:
                 self.metrics.record_ai_call(timer.duration_ms, success=True)
                 log_ai_analysis(self.logger, timer.duration_ms, success=True)
                 return result
+            except AIProviderError as e:
+                self.metrics.record_ai_call(timer.duration_ms, success=False)
+                log_ai_analysis(self.logger, timer.duration_ms, success=False)
+                self.logger.warning(f"AI analysis unavailable: {e}")
+                return f"AI analysis unavailable. Manual investigation required. (CPU: {cpu_usage:.2f}% exceeded threshold: {threshold:.2f}%)"
             except Exception as e:
                 self.metrics.record_ai_call(timer.duration_ms, success=False)
                 log_ai_analysis(self.logger, timer.duration_ms, success=False)
-                return f"AI analysis failed: {e}"
+                self.logger.error(f"Unexpected error during AI analysis: {e}")
+                return f"AI analysis failed unexpectedly. Manual investigation required."
     
     def monitor(self, simulator: DellServerSimulator, steps: int = DEFAULT_MONITORING_STEPS) -> None:
         """

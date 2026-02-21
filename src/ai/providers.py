@@ -1,6 +1,8 @@
 """AI provider abstraction for dependency injection"""
 
 from abc import ABC, abstractmethod
+from src.utils.retry import retry
+from src.utils.exceptions import AIProviderError
 
 
 class AIProvider(ABC):
@@ -26,8 +28,9 @@ class OllamaProvider(AIProvider):
     def __init__(self, model: str = "llama3") -> None:
         self.model = model
     
+    @retry(max_attempts=3, delay=1.0, backoff=2.0)
     def analyze(self, prompt: str) -> str:
-        """Analyze using Ollama"""
+        """Analyze using Ollama with retry logic"""
         import ollama
         
         try:
@@ -35,8 +38,12 @@ class OllamaProvider(AIProvider):
                 {'role': 'user', 'content': prompt}
             ])
             return response['message']['content']
+        except KeyError as e:
+            raise AIProviderError(f"Invalid AI response format: missing {e}")
+        except ConnectionError:
+            raise AIProviderError(f"Cannot connect to Ollama. Ensure service is running.")
         except Exception as e:
-            return f"Could not connect to Ollama: {e}. Make sure the app is running!"
+            raise AIProviderError(f"AI analysis failed: {e}")
 
 
 class MockAIProvider(AIProvider):

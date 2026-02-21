@@ -2,6 +2,7 @@ import pandas as pd
 from pathlib import Path
 from typing import Optional
 from src.utils.config import get_config
+from src.utils.exceptions import ThresholdCalculationError
 
 
 def calculate_release_thresholds() -> Optional[float]:
@@ -20,9 +21,7 @@ def calculate_release_thresholds() -> Optional[float]:
     print(f"Looking for data in: {file_path}")
 
     if not file_path.exists():
-        print(f"Error: Could not find {file_path}")
-        print("Please run simulator.py first to generate the data!")
-        return None
+        raise ThresholdCalculationError(f"Data file not found: {file_path}")
 
     try:
         df = pd.read_csv(file_path)
@@ -31,8 +30,14 @@ def calculate_release_thresholds() -> Optional[float]:
         baseline_status: str = config.get('data', 'baseline_status')
         healthy_data = df[df['Status'] == baseline_status]
         
+        if healthy_data.empty:
+            raise ThresholdCalculationError(f"No baseline data with status '{baseline_status}'")
+        
         avg_cpu: float = healthy_data['CPU_Usage'].mean()
         std_cpu: float = healthy_data['CPU_Usage'].std()
+        
+        if pd.isna(avg_cpu) or pd.isna(std_cpu):
+            raise ThresholdCalculationError("Invalid baseline: contains NaN values")
         
         # Get sigma from config
         sigma: float = config.get('monitoring', 'threshold_sigma')
@@ -43,9 +48,12 @@ def calculate_release_thresholds() -> Optional[float]:
         print(f"Critical Threshold ({sigma}-Sigma): {cpu_threshold:.2f}%")
         
         return cpu_threshold
+    except pd.errors.EmptyDataError:
+        raise ThresholdCalculationError("Data file is empty")
+    except KeyError as e:
+        raise ThresholdCalculationError(f"Missing required column: {e}")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return None
+        raise ThresholdCalculationError(f"Threshold calculation failed: {e}")
 
 if __name__ == "__main__":
     calculate_release_thresholds()
