@@ -7,6 +7,8 @@ from tools.simulate import DellServerSimulator
 from src.ai.providers import AIProvider, OllamaProvider
 from src.data.loader import DataLoader, CSVDataLoader
 from src.reporting.reporter import IncidentReporter, LoggingReporter
+from src.reporting.logger import setup_logging, log_threshold_breach, log_system_start, log_ai_analysis, log_incident
+from src.reporting.metrics import PerformanceMetrics, Timer
 from src.utils.config import get_config
 from src.data.models import ThresholdConfig, IncidentReport
 
@@ -19,7 +21,8 @@ class GuardSystem:
         data_loader: DataLoader,
         ai_provider: AIProvider,
         reporter: IncidentReporter,
-        sigma: float = 3.0
+        sigma: float = 3.0,
+        logger: Optional[logging.Logger] = None
     ) -> None:
         """
         Initialize guard system with dependencies.
@@ -29,12 +32,14 @@ class GuardSystem:
             ai_provider: AI provider implementation
             reporter: Incident reporter implementation
             sigma: Threshold sigma multiplier
+            logger: Optional logger instance
         """
         self.data_loader = data_loader
         self.ai_provider = ai_provider
         self.reporter = reporter
         self.sigma = sigma
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger or logging.getLogger(__name__)
+        self.metrics = PerformanceMetrics()
     
     def calculate_threshold(self) -> ThresholdConfig:
         """Calculate monitoring threshold from baseline data"""
@@ -56,7 +61,17 @@ class GuardSystem:
     
     Provide a concise answer in 2-3 sentences.
     """
-        return self.ai_provider.analyze(prompt)
+        
+        with Timer() as timer:
+            try:
+                result = self.ai_provider.analyze(prompt)
+                self.metrics.record_ai_call(timer.duration_ms, success=True)
+                log_ai_analysis(self.logger, timer.duration_ms, success=True)
+                return result
+            except Exception as e:
+                self.metrics.record_ai_call(timer.duration_ms, success=False)
+                log_ai_analysis(self.logger, timer.duration_ms, success=False)
+                return f"AI analysis failed: {e}"
     
     def monitor(self, simulator: DellServerSimulator, steps: int = 10) -> None:
         """
@@ -68,16 +83,21 @@ class GuardSystem:
         """
         threshold = self.calculate_threshold()
         
-        self.logger.info("--- SYSTEM START: Guard initialized ---")
+        log_system_start(self.logger, threshold.cpu_threshold, self.sigma)
         print(f"--- GUARD SYSTEM ACTIVE. Monitoring... ---")
         
         for i in range(1, steps + 1):
+            self.metrics.record_check()
+            
             has_incident: bool = i >= 6
             metrics = simulator.get_metrics(is_broken=has_incident)
             current_cpu: float = metrics['cpu_usage']
             
             if threshold.is_breached(current_cpu):
-                self.logger.warning(f"THRESHOLD BREACHED: CPU reached {current_cpu:.2f}%")
+                self.metrics.record_breach()
+                
+                breach_pct = ((current_cpu - threshold.cpu_threshold) / threshold.cpu_threshold) * 100
+                log_threshold_breach(self.logger, current_cpu, threshold.cpu_threshold, breach_pct)
                 print(f"STEP {i}: CPU {current_cpu:.2f}% --> [🚨 ALERT!]")
                 
                 print("\n[SYSTEM]: Consulting AI for incident diagnosis...")
@@ -95,7 +115,19 @@ class GuardSystem:
                     action_taken="AUTOMATIC ROLLBACK"
                 )
                 
+                log_incident(
+                    self.logger,
+                    current_cpu,
+                    threshold.cpu_threshold,
+                    ai_verdict,
+                    "AUTOMATIC ROLLBACK"
+                )
+                
                 self.reporter.report_incident(incident)
+                
+                # Log metrics summary
+                summary = self.metrics.get_summary()
+                self.logger.info(f"Performance metrics: {summary}")
                 
                 print("LOGGED TO incidents.log. INITIATING ROLLBACK...")
                 return
@@ -103,19 +135,20 @@ class GuardSystem:
                 print(f"STEP {i}: CPU {current_cpu:.2f}% --> [✅ STABLE]")
         
         self.logger.info("--- SYSTEM END: Deployment successful ---")
+        summary = self.metrics.get_summary()
+        self.logger.info(f"Final metrics: {summary}")
 
 
 def run_guard_system() -> None:
     """Main entry point with dependency setup"""
     config = get_config()
     
-    # Configure logging
+    # Setup structured logging
     log_config = config.logging
-    logging.basicConfig(
-        filename=log_config['file'], 
-        level=getattr(logging, log_config['level']),
-        format=log_config['format'],
-        datefmt='%Y-%m-%d %H:%M:%S'
+    logger = setup_logging(
+        log_file=log_config['file'],
+        log_level=log_config['level'],
+        log_format=log_config['format']
     )
     
     # Setup dependencies
@@ -129,7 +162,6 @@ def run_guard_system() -> None:
     
     ai_provider = OllamaProvider(model=config.ai['model'])
     
-    logger = logging.getLogger(__name__)
     reporter = LoggingReporter(logger)
     
     sigma: float = config.get('monitoring', 'threshold_sigma')
@@ -139,7 +171,8 @@ def run_guard_system() -> None:
         data_loader=data_loader,
         ai_provider=ai_provider,
         reporter=reporter,
-        sigma=sigma
+        sigma=sigma,
+        logger=logger
     )
     
     simulator = DellServerSimulator()
