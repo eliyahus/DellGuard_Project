@@ -1,9 +1,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+from typing import Dict, Any, List
 from src.utils.config import get_config
 
-def create_dashboard():
+
+def create_dashboard() -> None:
+    """Generate server health visualization dashboard"""
     config = get_config()
     
     # Get paths from config
@@ -18,9 +21,9 @@ def create_dashboard():
     df = pd.read_csv(file_path)
     
     # Get visualization config
-    viz_config = config.visualization
-    fig_size = viz_config['figure_size']
-    dpi = viz_config['dpi']
+    viz_config: Dict[str, Any] = config.visualization
+    fig_size: List[int] = viz_config['figure_size']
+    dpi: int = viz_config['dpi']
     
     # Create the plot
     plt.figure(figsize=tuple(fig_size), dpi=dpi)
@@ -29,10 +32,10 @@ def create_dashboard():
     plt.plot(df.index, df['CPU_Usage'], label='CPU Usage (%)', color='blue', linewidth=2)
     
     # Add threshold line
-    baseline_status = config.get('data', 'baseline_status')
+    baseline_status: str = config.get('data', 'baseline_status')
     normal_cpu = df[df['Status'] == baseline_status]['CPU_Usage']
-    sigma = config.get('monitoring', 'threshold_sigma')
-    threshold = normal_cpu.mean() + (sigma * normal_cpu.std())
+    sigma: float = config.get('monitoring', 'threshold_sigma')
+    threshold: float = normal_cpu.mean() + (sigma * normal_cpu.std())
     
     plt.axhline(y=threshold, color='red', linestyle='--', label=f'Threshold ({threshold:.2f}%)')
     

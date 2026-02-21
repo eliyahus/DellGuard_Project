@@ -1,16 +1,24 @@
 import ollama
+from typing import Dict, Any
 from src.utils.config import get_config
 
-def analyze_incident_with_ai(metrics_text):
+
+def analyze_incident_with_ai(metrics_text: str) -> str:
     """
-    Sends telemetry data to Llama 3 and requests a diagnostic verdict.
+    Sends telemetry data to AI and requests a diagnostic verdict.
+    
+    Args:
+        metrics_text: Formatted metrics string for analysis
+        
+    Returns:
+        AI diagnosis string
     """
     config = get_config()
-    ai_config = config.ai
+    ai_config: Dict[str, Any] = config.ai
     
     print("\n[SYSTEM]: Sending data to AI for analysis...")
     
-    prompt = f"""
+    prompt: str = f"""
     Analyze this server telemetry from a Dell server. 
     A rollback was triggered. What is the most likely cause?
     

@@ -3,13 +3,13 @@
 import os
 import yaml
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 
 class Config:
     """Configuration loader and manager"""
     
-    def __init__(self, config_path: str = None):
+    def __init__(self, config_path: Optional[str] = None) -> None:
         """
         Load configuration from YAML file.
         
@@ -19,10 +19,10 @@ class Config:
         if config_path is None:
             # Default to config/default.yaml
             project_root = Path(__file__).parent.parent.parent
-            config_path = project_root / "config" / "default.yaml"
+            config_path = str(project_root / "config" / "default.yaml")
         
         self.config_path = Path(config_path)
-        self._config = self._load_config()
+        self._config: Dict[str, Any] = self._load_config()
         self._apply_env_overrides()
     
     def _load_config(self) -> Dict[str, Any]:
@@ -33,7 +33,7 @@ class Config:
         with open(self.config_path, 'r') as f:
             return yaml.safe_load(f)
     
-    def _apply_env_overrides(self):
+    def _apply_env_overrides(self) -> None:
         """Apply environment variable overrides"""
         # Example: DELLGUARD_AI_MODEL overrides ai.model
         env_mappings = {
@@ -49,8 +49,9 @@ class Config:
             if value is not None:
                 # Convert to appropriate type
                 if key == 'threshold_sigma':
-                    value = float(value)
-                self._config[section][key] = value
+                    self._config[section][key] = float(value)
+                else:
+                    self._config[section][key] = value
     
     def get(self, section: str, key: str, default: Any = None) -> Any:
         """Get configuration value"""
@@ -83,10 +84,10 @@ class Config:
 
 
 # Global config instance
-_config_instance = None
+_config_instance: Optional[Config] = None
 
 
-def get_config(config_path: str = None) -> Config:
+def get_config(config_path: Optional[str] = None) -> Config:
     """Get or create global config instance"""
     global _config_instance
     if _config_instance is None:
@@ -94,7 +95,7 @@ def get_config(config_path: str = None) -> Config:
     return _config_instance
 
 
-def reload_config(config_path: str = None):
+def reload_config(config_path: Optional[str] = None) -> Config:
     """Reload configuration"""
     global _config_instance
     _config_instance = Config(config_path)

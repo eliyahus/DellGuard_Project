@@ -1,9 +1,16 @@
 import pandas as pd
-import os
 from pathlib import Path
+from typing import Optional
 from src.utils.config import get_config
 
-def calculate_release_thresholds():
+
+def calculate_release_thresholds() -> Optional[float]:
+    """
+    Calculate CPU threshold based on baseline data.
+    
+    Returns:
+        CPU threshold value or None if calculation fails
+    """
     config = get_config()
     
     # Get project root and construct file path
@@ -15,21 +22,21 @@ def calculate_release_thresholds():
     if not file_path.exists():
         print(f"Error: Could not find {file_path}")
         print("Please run simulator.py first to generate the data!")
-        return
+        return None
 
     try:
         df = pd.read_csv(file_path)
         
         # Filter: learn only from healthy data
-        baseline_status = config.get('data', 'baseline_status')
+        baseline_status: str = config.get('data', 'baseline_status')
         healthy_data = df[df['Status'] == baseline_status]
         
-        avg_cpu = healthy_data['CPU_Usage'].mean()
-        std_cpu = healthy_data['CPU_Usage'].std()
+        avg_cpu: float = healthy_data['CPU_Usage'].mean()
+        std_cpu: float = healthy_data['CPU_Usage'].std()
         
         # Get sigma from config
-        sigma = config.get('monitoring', 'threshold_sigma')
-        cpu_threshold = avg_cpu + (sigma * std_cpu)
+        sigma: float = config.get('monitoring', 'threshold_sigma')
+        cpu_threshold: float = avg_cpu + (sigma * std_cpu)
         
         print("\n--- BASELINE CALCULATED ---")
         print(f"Average CPU: {avg_cpu:.2f}%")
@@ -38,6 +45,7 @@ def calculate_release_thresholds():
         return cpu_threshold
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+        return None
 
 if __name__ == "__main__":
     calculate_release_thresholds()
