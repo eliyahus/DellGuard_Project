@@ -1,4 +1,13 @@
-"""Retry logic for transient failures"""
+"""Retry logic for transient failures
+
+Example usage:
+    @retry(max_attempts=3, delay=1.0, backoff=2.0)
+    def call_external_api():
+        response = requests.get("https://api.example.com")
+        return response.json()
+    
+    # Will retry up to 3 times with delays: 1s, 2s, 4s
+"""
 
 import time
 import logging
@@ -12,12 +21,16 @@ T = TypeVar('T')
 
 def retry(max_attempts: int = 3, delay: float = 1.0, backoff: float = 2.0):
     """
-    Retry decorator for handling transient failures.
+    Retry decorator for handling transient failures with exponential backoff.
+    
+    Useful for network calls, external APIs, or any operation that may
+    temporarily fail but succeed on retry.
     
     Args:
-        max_attempts: Maximum number of retry attempts
-        delay: Initial delay between retries in seconds
-        backoff: Multiplier for delay after each attempt
+        max_attempts: Maximum number of retry attempts (default: 3)
+        delay: Initial delay between retries in seconds (default: 1.0)
+        backoff: Multiplier for delay after each attempt (default: 2.0)
+                 Example: delay=1.0, backoff=2.0 → delays of 1s, 2s, 4s
     """
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)

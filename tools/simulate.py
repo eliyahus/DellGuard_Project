@@ -61,25 +61,37 @@ import csv
 
 
 if __name__ == "__main__":
-    sim = DellServerSimulator()
+    simulator = DellServerSimulator()
     filename = "server_metrics.csv"
     
-    print(f"Generating report and saving to {filename}...")
+    print(f"Generating simulated server metrics and saving to {filename}...")
     
     with open(filename, mode='w', newline='') as file:
         writer = csv.writer(file)
         
-        # Write the table header
+        # Write CSV header
         writer.writerow(["Timestamp", "CPU_Usage", "Latency_MS", "Error_Rate", "Status"])
         
-        # Generate baseline (healthy) data
+        # Generate baseline (healthy) data - represents normal server operation
         for _ in range(BASELINE_SAMPLE_COUNT):
-            m = sim.get_metrics(is_broken=False)
-            writer.writerow([m["timestamp"], m["cpu_usage"], m["latency_ms"], m["error_rate"], "Normal"])
+            metrics = simulator.get_metrics(is_broken=False)
+            writer.writerow([
+                metrics["timestamp"],
+                metrics["cpu_usage"],
+                metrics["latency_ms"],
+                metrics["error_rate"],
+                "Normal"
+            ])
             
-        # Generate incident (critical) data
+        # Generate incident (critical) data - simulates degraded performance
         for _ in range(INCIDENT_SAMPLE_COUNT):
-            m = sim.get_metrics(is_broken=True)
-            writer.writerow([m["timestamp"], m["cpu_usage"], m["latency_ms"], m["error_rate"], "CRITICAL"])
+            metrics = simulator.get_metrics(is_broken=True)
+            writer.writerow([
+                metrics["timestamp"],
+                metrics["cpu_usage"],
+                metrics["latency_ms"],
+                metrics["error_rate"],
+                "CRITICAL"
+            ])
 
-    print("Success! Your first dataset is ready.")
+    print(f"✓ Generated {BASELINE_SAMPLE_COUNT} healthy + {INCIDENT_SAMPLE_COUNT} incident samples")

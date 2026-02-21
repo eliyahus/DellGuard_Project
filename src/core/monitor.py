@@ -90,11 +90,18 @@ class GuardSystem:
     
     def monitor(self, simulator: DellServerSimulator, steps: int = DEFAULT_MONITORING_STEPS) -> None:
         """
-        Run monitoring loop.
+        Run monitoring loop to detect anomalies and trigger rollback if needed.
+        
+        The monitoring loop:
+        1. Calculates threshold from baseline data
+        2. Checks server metrics at each step
+        3. Compares against threshold (3-sigma by default)
+        4. If breached: consults AI, logs incident, triggers rollback
+        5. If stable: continues monitoring
         
         Args:
             simulator: Server simulator for metrics
-            steps: Number of monitoring steps
+            steps: Number of monitoring steps (default: 10)
         """
         threshold = self.calculate_threshold()
         
@@ -104,17 +111,20 @@ class GuardSystem:
         for step in range(1, steps + 1):
             self.metrics.record_check()
             
+            # Simulate incident starting at step 6 (for demo purposes)
             has_incident: bool = step >= INCIDENT_START_STEP
             metrics = simulator.get_metrics(is_broken=has_incident)
             current_cpu: float = metrics['cpu_usage']
             
             if threshold.is_breached(current_cpu):
+                # CRITICAL: Threshold breached - initiate incident response
                 self.metrics.record_breach()
                 
                 breach_pct = ((current_cpu - threshold.cpu_threshold) / threshold.cpu_threshold) * 100
                 log_threshold_breach(self.logger, current_cpu, threshold.cpu_threshold, breach_pct)
                 print(f"STEP {step}: CPU {current_cpu:.2f}% --> [🚨 ALERT!]")
                 
+                # Consult AI for root cause analysis
                 print("\n[SYSTEM]: Consulting AI for incident diagnosis...")
                 ai_verdict: str = self.analyze_incident(current_cpu, threshold.cpu_threshold)
                 
