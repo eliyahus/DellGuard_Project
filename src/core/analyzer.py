@@ -1,17 +1,18 @@
 import pandas as pd
-import os # Library for working with the operating system
+import os
+from pathlib import Path
+from src.utils.config import get_config
 
 def calculate_release_thresholds():
-    # MAGIC LINE: Find the folder where THIS script is saved
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config = get_config()
     
-    # Create the full path to the CSV file in that same folder
-    file_path = os.path.join(script_dir, "server_metrics.csv")
+    # Get project root and construct file path
+    project_root = Path(__file__).parent.parent.parent
+    file_path = project_root / config.get('data', 'metrics_file')
     
     print(f"Looking for data in: {file_path}")
 
-    # Check if the file actually exists before trying to open it
-    if not os.path.exists(file_path):
+    if not file_path.exists():
         print(f"Error: Could not find {file_path}")
         print("Please run simulator.py first to generate the data!")
         return
@@ -20,17 +21,19 @@ def calculate_release_thresholds():
         df = pd.read_csv(file_path)
         
         # Filter: learn only from healthy data
-        healthy_data = df[df['Status'] == 'Normal']
+        baseline_status = config.get('data', 'baseline_status')
+        healthy_data = df[df['Status'] == baseline_status]
         
         avg_cpu = healthy_data['CPU_Usage'].mean()
         std_cpu = healthy_data['CPU_Usage'].std()
         
-        # 3-Sigma threshold
-        cpu_threshold = avg_cpu + (3 * std_cpu)
+        # Get sigma from config
+        sigma = config.get('monitoring', 'threshold_sigma')
+        cpu_threshold = avg_cpu + (sigma * std_cpu)
         
         print("\n--- BASELINE CALCULATED ---")
         print(f"Average CPU: {avg_cpu:.2f}%")
-        print(f"Critical Threshold: {cpu_threshold:.2f}%")
+        print(f"Critical Threshold ({sigma}-Sigma): {cpu_threshold:.2f}%")
         
         return cpu_threshold
     except Exception as e:

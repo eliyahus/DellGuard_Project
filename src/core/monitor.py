@@ -3,27 +3,36 @@ import time
 from src.ai.client import analyze_incident_with_ai
 import os
 import logging
+from pathlib import Path
 from tools.simulate import DellServerSimulator
-
-# --- LOGGING SETUP ---
-logging.basicConfig(
-    filename='incidents.log', 
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+from src.utils.config import get_config
 
 def run_guard_system():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(script_dir, "server_metrics.csv")
+    config = get_config()
+    
+    # Configure logging from config
+    log_config = config.logging
+    logging.basicConfig(
+        filename=log_config['file'], 
+        level=getattr(logging, log_config['level']),
+        format=log_config['format'],
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    
+    # Get file path from config
+    project_root = Path(__file__).parent.parent.parent
+    file_path = project_root / config.get('data', 'metrics_file')
 
     try:
         df = pd.read_csv(file_path)
-        healthy_data = df[df['Status'] == 'Normal']
-        threshold = healthy_data['CPU_Usage'].mean() + (3 * healthy_data['CPU_Usage'].std())
+        baseline_status = config.get('data', 'baseline_status')
+        healthy_data = df[df['Status'] == baseline_status]
+        
+        sigma = config.get('monitoring', 'threshold_sigma')
+        threshold = healthy_data['CPU_Usage'].mean() + (sigma * healthy_data['CPU_Usage'].std())
         
         logging.info("--- SYSTEM START: Guard initialized ---")
-        logging.info(f"Threshold set to: {threshold:.2f}%")
+        logging.info(f"Threshold set to: {threshold:.2f}% ({sigma}-Sigma)")
         
         print(f"--- GUARD SYSTEM ACTIVE. Monitoring... ---")
     except Exception as e:

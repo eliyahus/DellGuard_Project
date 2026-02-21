@@ -1,0 +1,24 @@
+monitoring:
+  threshold_sigma: 3
+  check_interval_seconds: 5
+  metrics_window_size: 100
+
+ai:
+  provider: ollama
+  model: llama3
+  timeout_seconds: 30
+  max_retries: 3
+
+data:
+  metrics_file: server_metrics.csv
+  baseline_status: Normal
+
+logging:
+  level: INFO
+  file: incidents.log
+  format: "%(asctime)s - %(levelname)s - %(message)s"
+
+visualization:
+  output_file: server_health_chart.png
+  figure_size: [12, 6]
+  dpi: 100

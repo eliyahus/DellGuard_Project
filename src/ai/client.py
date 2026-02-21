@@ -1,10 +1,14 @@
 import ollama
+from src.utils.config import get_config
 
 def analyze_incident_with_ai(metrics_text):
     """
     Sends telemetry data to Llama 3 and requests a diagnostic verdict.
     """
-    print("\n[SYSTEM]: Sending data to Llama 3 for analysis...")
+    config = get_config()
+    ai_config = config.ai
+    
+    print("\n[SYSTEM]: Sending data to AI for analysis...")
     
     prompt = f"""
     Analyze this server telemetry from a Dell server. 
@@ -18,7 +22,7 @@ def analyze_incident_with_ai(metrics_text):
 
     try:
         # Requesting a response from the local Ollama server
-        response = ollama.chat(model='llama3', messages=[
+        response = ollama.chat(model=ai_config['model'], messages=[
             {
                 'role': 'user',
                 'content': prompt,
@@ -26,7 +30,7 @@ def analyze_incident_with_ai(metrics_text):
         ])
         return response['message']['content']
     except Exception as e:
-        return f"Could not connect to Ollama: {e}. Make sure the app is running!"
+        return f"Could not connect to {ai_config['provider']}: {e}. Make sure the app is running!"
 
 # Testing the module
 if __name__ == "__main__":

@@ -1,29 +1,38 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
+from pathlib import Path
+from src.utils.config import get_config
 
 def create_dashboard():
-    # 1. Path setup
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(script_dir, "server_metrics.csv")
+    config = get_config()
     
-    if not os.path.exists(file_path):
-        print("Error: server_metrics.csv not found!")
+    # Get paths from config
+    project_root = Path(__file__).parent.parent.parent
+    file_path = project_root / config.get('data', 'metrics_file')
+    
+    if not file_path.exists():
+        print(f"Error: {file_path} not found!")
         return
 
-    # 2. Load data
+    # Load data
     df = pd.read_csv(file_path)
     
-    # 3. Create the plot
-    plt.figure(figsize=(12, 6))
+    # Get visualization config
+    viz_config = config.visualization
+    fig_size = viz_config['figure_size']
+    dpi = viz_config['dpi']
+    
+    # Create the plot
+    plt.figure(figsize=tuple(fig_size), dpi=dpi)
     
     # Plotting CPU usage
     plt.plot(df.index, df['CPU_Usage'], label='CPU Usage (%)', color='blue', linewidth=2)
     
-    # Add a red horizontal line for our Threshold (from Step 2)
-    # Let's take the mean of normal data + 3 std as we did before
-    normal_cpu = df[df['Status'] == 'Normal']['CPU_Usage']
-    threshold = normal_cpu.mean() + (3 * normal_cpu.std())
+    # Add threshold line
+    baseline_status = config.get('data', 'baseline_status')
+    normal_cpu = df[df['Status'] == baseline_status]['CPU_Usage']
+    sigma = config.get('monitoring', 'threshold_sigma')
+    threshold = normal_cpu.mean() + (sigma * normal_cpu.std())
     
     plt.axhline(y=threshold, color='red', linestyle='--', label=f'Threshold ({threshold:.2f}%)')
     
@@ -31,16 +40,16 @@ def create_dashboard():
     plt.fill_between(df.index, 0, 100, where=(df['Status'] == 'CRITICAL'), 
                      color='red', alpha=0.2, label='Incident Zone')
 
-    # 4. Styling the chart
+    # Styling the chart
     plt.title('Dell Server Health Monitor: Incident Detection', fontsize=16)
     plt.xlabel('Time (Samples)', fontsize=12)
     plt.ylabel('CPU Load (%)', fontsize=12)
     plt.legend()
     plt.grid(True, linestyle=':', alpha=0.6)
-    plt.ylim(0, 110) # Keeping it clear
+    plt.ylim(0, 110)
 
-    # 5. Save and Show
-    output_image = os.path.join(script_dir, "server_health_chart.png")
+    # Save and Show
+    output_image = project_root / viz_config['output_file']
     plt.savefig(output_image)
     print(f"Chart saved as: {output_image}")
     plt.show()
