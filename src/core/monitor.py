@@ -12,6 +12,11 @@ from src.reporting.metrics import PerformanceMetrics, Timer
 from src.utils.config import get_config
 from src.data.models import ThresholdConfig, IncidentReport
 
+# Monitoring constants
+INCIDENT_START_STEP = 6  # Step at which simulator triggers incident (matches simulator behavior)
+SEPARATOR_WIDTH = 50  # Width of separator lines in console output
+DEFAULT_MONITORING_STEPS = 10  # Default number of monitoring cycles
+
 
 class GuardSystem:
     """Main guard system with dependency injection"""
@@ -73,7 +78,7 @@ class GuardSystem:
                 log_ai_analysis(self.logger, timer.duration_ms, success=False)
                 return f"AI analysis failed: {e}"
     
-    def monitor(self, simulator: DellServerSimulator, steps: int = 10) -> None:
+    def monitor(self, simulator: DellServerSimulator, steps: int = DEFAULT_MONITORING_STEPS) -> None:
         """
         Run monitoring loop.
         
@@ -86,10 +91,10 @@ class GuardSystem:
         log_system_start(self.logger, threshold.cpu_threshold, self.sigma)
         print(f"--- GUARD SYSTEM ACTIVE. Monitoring... ---")
         
-        for i in range(1, steps + 1):
+        for step in range(1, steps + 1):
             self.metrics.record_check()
             
-            has_incident: bool = i >= 6
+            has_incident: bool = step >= INCIDENT_START_STEP
             metrics = simulator.get_metrics(is_broken=has_incident)
             current_cpu: float = metrics['cpu_usage']
             
@@ -98,14 +103,14 @@ class GuardSystem:
                 
                 breach_pct = ((current_cpu - threshold.cpu_threshold) / threshold.cpu_threshold) * 100
                 log_threshold_breach(self.logger, current_cpu, threshold.cpu_threshold, breach_pct)
-                print(f"STEP {i}: CPU {current_cpu:.2f}% --> [🚨 ALERT!]")
+                print(f"STEP {step}: CPU {current_cpu:.2f}% --> [🚨 ALERT!]")
                 
                 print("\n[SYSTEM]: Consulting AI for incident diagnosis...")
                 ai_verdict: str = self.analyze_incident(current_cpu, threshold.cpu_threshold)
                 
-                print("="*50)
+                print("=" * SEPARATOR_WIDTH)
                 print(f"🤖 AI DIAGNOSIS:\n{ai_verdict}")
-                print("="*50 + "\n")
+                print("=" * SEPARATOR_WIDTH + "\n")
                 
                 incident = IncidentReport(
                     timestamp=datetime.now(),
@@ -132,7 +137,7 @@ class GuardSystem:
                 print("LOGGED TO incidents.log. INITIATING ROLLBACK...")
                 return
             else:
-                print(f"STEP {i}: CPU {current_cpu:.2f}% --> [✅ STABLE]")
+                print(f"STEP {step}: CPU {current_cpu:.2f}% --> [✅ STABLE]")
         
         self.logger.info("--- SYSTEM END: Deployment successful ---")
         summary = self.metrics.get_summary()
