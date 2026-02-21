@@ -1,39 +1,32 @@
-# DellGuard: Automated Deployment Safety System
+# DellGuard: AI-Driven Infrastructure Safety System 🚀
 
-**DellGuard** is a proactive incident response prototype designed to protect server infrastructure during software updates. It automatically detects performance anomalies and triggers an immediate rollback to prevent system-wide crashes.
+**DellGuard** is an automated monitoring and safety system designed to protect server infrastructure during software deployments. It uses statistical analysis to detect anomalies and local AI to provide real-time incident diagnostics.
 
-## 🚀 Key Features
-- **Statistical Baseline**: Automatically calculates "Healthy" server behavior using the 3-Sigma rule.
-- **Real-time Guard**: Intercepts CPU spikes during deployment steps.
-- **Automated Rollback**: Stops deployment and restores stable versions instantly upon anomaly detection.
-- **Audit Logging**: Keeps a detailed `incidents.log` for post-mortem analysis.
-- **Visual Analytics**: Generates health charts for incident visualization.
+## 🌟 Key Features
+* **3-Sigma Statistical Monitoring**: Automatically calculates healthy performance baselines and sets dynamic thresholds.
+* **AI Incident Diagnosis**: Integrated with **Llama 3 (via Ollama)** to analyze telemetry data and provide human-readable root cause reports.
+* **Automated Rollback Logic**: Instantly triggers safety protocols when critical thresholds are breached.
+* **Data Visualization**: Generates performance charts (`server_health_chart.png`) for post-incident review.
+* **Professional Logging**: Maintains a detailed `incidents.log` with AI-generated insights.
 
-## 📁 Project Structure
-* `main.py` - The central controller to run the entire pipeline.
-* `simulate.py` - Dell server environment emulator.
-* `analyzer.py` - Statistical engine for baseline calculation.
-* `guard.py` - Monitoring and rollback logic.
-* `visualizer.py` - Reporting tool (generates PNG charts).
+## 🛠 Tech Stack
+* **Language:** Python 3.x
+* **Data Analysis:** Pandas, NumPy
+* **AI Engine:** Ollama / Llama 3 (8B)
+* **Visualization:** Matplotlib
 
-## 🛠 Installation & Usage
+## 📊 How It Works
+1. **Baseline Creation**: The system reads historical data from `server_metrics.csv`.
+2. **Real-time Monitoring**: The `guard.py` module tracks live CPU usage.
+3. **Anomaly Detection**: If CPU usage exceeds the 3-Sigma threshold, an alert is triggered.
+4. **AI Verdict**: The system sends a telemetry snapshot to the local Llama 3 model.
+5. **Visualization**: A visual report is generated to show exactly where the spike occurred.
 
-1. **Clone the repository**:
- git clone [https://github.com/YOUR_USERNAME/DellGuard-System.git](https://github.com/YOUR_USERNAME/DellGuard-System.git)
-   cd DellGuard-System
+## 📸 Project Preview
+![Server Health Chart](server_health_chart.png)
 
-2. **Install dependencies**:
-   bash
-pip install -r requirements.txt
-
-4. **Run the system**:
-   bash
-python3 main.py
-
-📊 Roadmap
-[x] Statistical Anomaly Detection
-
-[x] Automated Incident Response (Rollback)
+## 📋 Example AI Diagnosis (from incidents.log)
+> "The most likely cause of the rollback is CPU utilization exceeding the threshold (100.30% vs 43.55%). This indicates a critical resource exhaustion, possibly due to a runaway process."
 
 [x] System Logging
 
