@@ -1,11 +1,11 @@
 import pandas as pd
 import time
+from ai_analyzer import analyze_incident_with_ai
 import os
-import logging # Standard professional logging library
+import logging
 from simulate import DellServerSimulator
 
 # --- LOGGING SETUP ---
-# This configures the file 'incidents.log'
 logging.basicConfig(
     filename='incidents.log', 
     level=logging.INFO,
@@ -38,17 +38,28 @@ def run_guard_system():
         current_cpu = metrics['cpu_usage']
         
         if current_cpu > threshold:
-            # RECORDING THE INCIDENT TO FILE
+            # 1. LOG THE ALERT
             logging.warning(f"THRESHOLD BREACHED: CPU reached {current_cpu:.2f}%")
-            logging.error("AUTOMATIC ROLLBACK INITIATED")
-            
             print(f"STEP {i}: CPU {current_cpu:.2f}% --> [🚨 ALERT!]")
+            
+            # 2. AI ANALYSIS START
+            print("\n[SYSTEM]: Consulting AI for incident diagnosis...")
+            incident_data = f"Current CPU: {current_cpu:.2f}%, Threshold: {threshold:.2f}%, Status: Critical"
+            
+            # Calling our Llama 3 module
+            ai_verdict = analyze_incident_with_ai(incident_data)
+            
+            print("="*50)
+            print(f"🤖 AI DIAGNOSIS:\n{ai_verdict}")
+            print("="*50 + "\n")
+            
+            # 3. RECORD AI VERDICT TO LOG FILE
+            logging.error(f"AUTOMATIC ROLLBACK INITIATED. AI Verdict: {ai_verdict}")
+            
             print("LOGGED TO incidents.log. INITIATING ROLLBACK...")
             return 
         else:
             print(f"STEP {i}: CPU {current_cpu:.2f}% --> [✅ STABLE]")
-            # We don't log every stable step to keep the file clean, 
-            # only start and critical events.
 
     logging.info("--- SYSTEM END: Deployment successful ---")
 
