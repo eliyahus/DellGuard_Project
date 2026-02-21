@@ -1,54 +1,43 @@
 """Unit tests for GuardSystem"""
 
 import pytest
-from datetime import datetime
 from src.core.monitor import GuardSystem
-from src.ai.providers import MockAIProvider
-from src.data.loader import MockDataLoader
-from src.reporting.reporter import ConsoleReporter
 from src.data.models import ThresholdConfig
-from tools.simulate import DellServerSimulator
+from tests.constants import (
+    TEST_BASELINE_MEAN,
+    TEST_BASELINE_STD,
+    TEST_SIGMA,
+    TEST_EXPECTED_THRESHOLD
+)
 
 
-def test_threshold_calculation():
+def test_threshold_calculation(guard_system) -> None:
     """Test threshold calculation with mock data"""
-    data_loader = MockDataLoader(mean=40.0, std=5.0)
-    ai_provider = MockAIProvider()
-    reporter = ConsoleReporter()
+    threshold = guard_system.calculate_threshold()
     
-    guard = GuardSystem(
-        data_loader=data_loader,
-        ai_provider=ai_provider,
-        reporter=reporter,
-        sigma=3.0
-    )
-    
-    threshold = guard.calculate_threshold()
-    
-    # 40 + (3 * 5) = 55
-    assert threshold.cpu_threshold == 55.0
-    assert threshold.sigma == 3.0
+    # TEST_BASELINE_MEAN + (TEST_SIGMA * TEST_BASELINE_STD) = 40 + (3 * 5) = 55
+    assert threshold.cpu_threshold == TEST_EXPECTED_THRESHOLD
+    assert threshold.sigma == TEST_SIGMA
 
 
-def test_threshold_breach_detection():
+def test_threshold_breach_detection() -> None:
     """Test threshold breach detection"""
-    threshold = ThresholdConfig(cpu_threshold=50.0, sigma=3.0)
+    threshold = ThresholdConfig(cpu_threshold=50.0, sigma=TEST_SIGMA)
     
     assert threshold.is_breached(60.0) is True
     assert threshold.is_breached(40.0) is False
     assert threshold.is_breached(50.0) is False
 
 
-def test_ai_analysis():
+def test_ai_analysis(mock_data_loader, console_reporter) -> None:
     """Test AI analysis with mock provider"""
-    data_loader = MockDataLoader()
-    ai_provider = MockAIProvider(response="Test AI response")
-    reporter = ConsoleReporter()
+    from src.ai.providers import MockAIProvider
     
+    ai_provider = MockAIProvider(response="Test AI response")
     guard = GuardSystem(
-        data_loader=data_loader,
+        data_loader=mock_data_loader,
         ai_provider=ai_provider,
-        reporter=reporter
+        reporter=console_reporter
     )
     
     result = guard.analyze_incident(cpu_usage=98.5, threshold=50.0)
@@ -56,22 +45,10 @@ def test_ai_analysis():
     assert result == "Test AI response"
 
 
-def test_guard_system_integration():
+def test_guard_system_integration(guard_system) -> None:
     """Test full guard system with mocks"""
-    data_loader = MockDataLoader(mean=40.0, std=5.0)
-    ai_provider = MockAIProvider(response="Mock diagnosis")
-    reporter = ConsoleReporter()
-    
-    guard = GuardSystem(
-        data_loader=data_loader,
-        ai_provider=ai_provider,
-        reporter=reporter,
-        sigma=3.0
-    )
-    
-    # Should not raise any exceptions
-    threshold = guard.calculate_threshold()
-    assert threshold.cpu_threshold == 55.0
+    threshold = guard_system.calculate_threshold()
+    assert threshold.cpu_threshold == TEST_EXPECTED_THRESHOLD
 
 
 if __name__ == "__main__":

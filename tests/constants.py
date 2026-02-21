@@ -33,7 +33,7 @@ TEST_AI_DURATION_NORMAL_MS = 1000.0  # Normal AI response
 TEST_AI_DURATION_SLOW_MS = 1500.0    # Slow AI response
 
 # Test timing
-TEST_SLEEP_DURATION_S = 0.01  # 10ms sleep for timer tests
+TEST_SLEEP_DURATION_SECONDS = 0.01  # 10ms sleep for timer tests
 
 # Test responses
 TEST_AI_RESPONSE_DEFAULT = "Mock AI analysis: CPU threshold breached"
