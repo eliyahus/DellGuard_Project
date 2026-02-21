@@ -19,17 +19,16 @@
 1. **Baseline Creation**: The system reads historical data from `server_metrics.csv`.
 2. **Real-time Monitoring**: The `guard.py` module tracks live CPU usage.
 3. **Anomaly Detection**: If CPU usage exceeds the 3-Sigma threshold, an alert is triggered.
-4. **AI Verdict**: The system sends a telemetry snapshot to the local Llama 3 model.
+4. **AI Verdict**: The system sends a telemetry snapshot to the local Llama 3 model for analysis.
 5. **Visualization**: A visual report is generated to show exactly where the spike occurred.
 
-## 📸 Project Preview
+## 📸 System in Action
 ![Server Health Chart](server_health_chart.png)
 
 ## 📋 Example AI Diagnosis (from incidents.log)
 > "The most likely cause of the rollback is CPU utilization exceeding the threshold (100.30% vs 43.55%). This indicates a critical resource exhaustion, possibly due to a runaway process."
 
-[x] System Logging
-
-[ ] Next Step: AI-Driven Root Cause Analysis using LLMs (Ollama/Llama3)
-
-[ ] Next Step: Integration with Prometheus/Grafana APIs
+## 🚀 Future Roadmap
+- [ ] **Multi-Metric Analysis**: Correlation between RAM, CPU, and Latency.
+- [ ] **Slack/Telegram Notifications**: Real-time alerts for SRE engineers.
+- [ ] **Predictive Guard**: Trend analysis to predict failures before they happen.
