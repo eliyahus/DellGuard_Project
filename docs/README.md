@@ -1,69 +1,41 @@
 # DellGuard Documentation
 
-## Refactoring Journey
+Welcome to the DellGuard documentation. This directory contains comprehensive guides for using, developing, and understanding the DellGuard system.
 
-This directory contains documentation of the DellGuard refactoring process from prototype to production-ready code.
+## 📚 Documentation Index
 
-### Completed Steps
+### User Guides
 
-1. **[Step 1: Architecture & Project Structure](refactoring/REFACTORING_STEP1_COMPLETED.md)**
-   - Professional src/ layout
-   - Package organization
-   - Module separation
+- **[Configuration Guide](configuration.md)** - How to configure DellGuard for your environment
+- **[Testing Guide](testing.md)** - Running and writing tests
 
-2. **[Step 2: Configuration Management](refactoring/REFACTORING_STEP2_COMPLETED.md)**
-   - YAML-based configuration
-   - Environment variable overrides
-   - Centralized config access
+### Developer Guides
 
-3. **[Step 3: Data Models & Type Safety](refactoring/REFACTORING_STEP3_COMPLETED.md)**
-   - Dataclasses for type safety
-   - Type hints throughout
-   - Structured data models
+- **[Architecture Overview](architecture.md)** - System design and architecture decisions
+- **[Development Guide](development.md)** - Contributing and extending DellGuard
 
-4. **[Step 4: Error Handling & Resilience](refactoring/STEP4_ERROR_HANDLING_PLAN.md)**
-   - Custom exception hierarchy
-   - Retry logic with exponential backoff
-   - Graceful degradation
+### Refactoring Journey
 
-5. **[Step 5: Dependency Injection & Testability](refactoring/REFACTORING_STEP5_COMPLETED.md)**
-   - Abstract interfaces
-   - Dependency injection pattern
-   - Mock implementations for testing
+- **[Refactoring Documentation](refactoring/)** - Complete history of the refactoring process from prototype to production
 
-6. **[Step 6: Logging & Observability](refactoring/REFACTORING_STEP6_COMPLETED.md)**
-   - Structured logging
-   - Performance metrics
-   - Incident tracking
+## Quick Links
 
-7. **[Step 7: Testing Strategy](refactoring/REFACTORING_STEP7_COMPLETED.md)**
-   - Unit tests (35 tests)
-   - Integration tests
-   - 100% pass rate
+- [Main README](../README.md) - Project overview and quick start
+- [Configuration Files](../config/) - YAML configuration files
+- [Source Code](../src/) - Production code
+- [Tests](../tests/) - Test suite
 
-8. **[Step 8: Code Quality Improvements](refactoring/STEP8_CODE_QUALITY_TODO.md)**
-   - Extract constants
-   - Pytest fixtures
-   - Documentation
-   - Polish ([Plan](refactoring/STEP8_POLISH_PLAN.md))
+## Getting Started
 
-### Planning Documents
+1. Read the [Main README](../README.md) for project overview
+2. Follow the [Configuration Guide](configuration.md) to set up your environment
+3. Check the [Testing Guide](testing.md) to verify your setup
+4. Review the [Architecture Overview](architecture.md) to understand the system design
 
-- **[Refactoring Suggestions](refactoring/REFACTORING_SUGGESTIONS.md)** - Initial refactoring plan
+## Contributing
 
-### Test Results
-
-- **42 tests** passing
-- **0.50s** execution time
-- **100%** pass rate
-
-### Key Improvements
-
-- ✅ Professional architecture
-- ✅ Type safety with dataclasses
-- ✅ Comprehensive error handling
-- ✅ Dependency injection
-- ✅ Structured logging
-- ✅ Performance metrics
-- ✅ 42 automated tests
-- ✅ Clean, maintainable code
+See the [Development Guide](development.md) for information on:
+- Code structure and conventions
+- Adding new features
+- Testing requirements
+- Pull request process

@@ -193,10 +193,12 @@ class CustomDataLoader(DataLoader):
 
 ## 📚 Documentation
 
-- [Refactoring Journey](docs/README.md) - Complete refactoring documentation
-- [Architecture Decisions](docs/refactoring/REFACTORING_STEP1_COMPLETED.md)
-- [Testing Strategy](docs/refactoring/REFACTORING_STEP7_COMPLETED.md)
-- [Error Handling](docs/refactoring/STEP4_ERROR_HANDLING_PLAN.md)
+- **[Documentation Index](docs/)** - Complete documentation hub
+- **[Architecture Overview](docs/architecture.md)** - System design and components
+- **[Configuration Guide](docs/configuration.md)** - Setup and configuration
+- **[Testing Guide](docs/testing.md)** - Running and writing tests
+- **[Development Guide](docs/development.md)** - Contributing and extending
+- **[Refactoring Journey](docs/refactoring/)** - Prototype to production transformation
 
 ## 🚀 Roadmap
 
