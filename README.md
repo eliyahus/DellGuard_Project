@@ -202,6 +202,8 @@ class CustomDataLoader(DataLoader):
 
 ## 🚀 Roadmap
 
+**See [ROADMAP.md](ROADMAP.md) for detailed product roadmap and future plans.**
+
 ### Completed ✅
 - [x] Professional architecture with src/ layout
 - [x] Type safety with dataclasses
