@@ -6,6 +6,16 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 
+def get_project_root() -> Path:
+    """
+    Get the project root directory.
+    
+    Returns:
+        Path to project root (3 levels up from this file)
+    """
+    return Path(__file__).parent.parent.parent
+
+
 class Config:
     """Configuration loader and manager"""
     
@@ -18,7 +28,7 @@ class Config:
         """
         if config_path is None:
             # Default to config/default.yaml
-            project_root = Path(__file__).parent.parent.parent
+            project_root = get_project_root()
             config_path = str(project_root / "config" / "default.yaml")
         
         self.config_path = Path(config_path)

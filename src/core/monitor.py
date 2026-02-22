@@ -9,7 +9,7 @@ from src.data.loader import DataLoader, CSVDataLoader
 from src.reporting.reporter import IncidentReporter, LoggingReporter
 from src.reporting.logger import setup_logging, log_threshold_breach, log_system_start, log_ai_analysis, log_incident
 from src.reporting.metrics import PerformanceMetrics, Timer
-from src.utils.config import get_config
+from src.utils.config import get_config, get_project_root
 from src.data.models import ThresholdConfig, IncidentReport
 from src.utils.exceptions import MonitoringError, ThresholdCalculationError, AIProviderError, DataLoadError
 
@@ -177,7 +177,7 @@ def run_guard_system() -> None:
     )
     
     # Setup dependencies
-    project_root = Path(__file__).parent.parent.parent
+    project_root = get_project_root()
     file_path = project_root / config.get('data', 'metrics_file')
     
     data_loader = CSVDataLoader(

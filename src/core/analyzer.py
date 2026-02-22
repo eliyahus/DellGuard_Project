@@ -1,11 +1,11 @@
 import pandas as pd
 from pathlib import Path
 from typing import Optional
-from src.utils.config import get_config
+from src.utils.config import get_config, get_project_root
 from src.utils.exceptions import ThresholdCalculationError
 
 
-def calculate_release_thresholds() -> Optional[float]:
+def calculate_baseline_threshold() -> Optional[float]:
     """
     Calculate CPU threshold based on baseline data using 3-sigma rule.
     
@@ -19,7 +19,7 @@ def calculate_release_thresholds() -> Optional[float]:
     config = get_config()
     
     # Get project root and construct file path
-    project_root = Path(__file__).parent.parent.parent
+    project_root = get_project_root()
     file_path = project_root / config.get('data', 'metrics_file')
     
     print(f"Looking for data in: {file_path}")
@@ -61,4 +61,4 @@ def calculate_release_thresholds() -> Optional[float]:
         raise ThresholdCalculationError(f"Threshold calculation failed: {e}")
 
 if __name__ == "__main__":
-    calculate_release_thresholds()
+    calculate_baseline_threshold()

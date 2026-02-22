@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Dict, Any, List
-from src.utils.config import get_config
+from src.utils.config import get_config, get_project_root
 
 
 def create_dashboard() -> None:
@@ -10,7 +10,7 @@ def create_dashboard() -> None:
     config = get_config()
     
     # Get paths from config
-    project_root = Path(__file__).parent.parent.parent
+    project_root = get_project_root()
     file_path = project_root / config.get('data', 'metrics_file')
     
     if not file_path.exists():
